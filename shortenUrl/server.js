@@ -23,14 +23,13 @@ function generateShortCode(length = 6) {
 }
 
 app.post('/shorten', async (req, res) => {
-    const { originalUrl, alias } = req.body;
+    const { originalUrl, alias, expirationDate } = req.body;
     const shortCode = alias || generateShortCode();
 
     const databaseId = 'TINYURL';
     const collectionId = 'urlid';
 
     try {
-        // Check if alias already exists
         if (alias) {
             const checkResponse = await databases.listDocuments(databaseId, collectionId, [
                 sdk.Query.equal('short_code', alias)
@@ -41,14 +40,20 @@ app.post('/shorten', async (req, res) => {
             }
         }
 
+        const data = {
+            original_url: originalUrl,
+            short_code: shortCode
+        };
+
+        if (expirationDate) {
+            data.expiration_date = expirationDate;
+        }
+
         const response = await databases.createDocument(
             databaseId,
             collectionId,
             sdk.ID.unique(),
-            {
-                original_url: originalUrl,
-                short_code: shortCode
-            }
+            data
         );
 
         res.json({ shortUrl: `http://localhost:3000/${shortCode}` });
@@ -69,7 +74,14 @@ app.get('/:shortCode', async (req, res) => {
         ]);
 
         if (response.documents.length > 0) {
-            const originalUrl = response.documents[0].original_url;
+            const document = response.documents[0];
+            const originalUrl = document.original_url;
+            const expirationDate = document.expiration_date;
+
+            if (expirationDate && new Date(expirationDate) < new Date()) {
+                return res.status(410).send('URL has expired');
+            }
+
             res.redirect(originalUrl);
         } else {
             res.status(404).send('URL not found');
