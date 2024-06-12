@@ -37,30 +37,29 @@ app.post('/shorten', async (req, res) => {
             }
         );
 
-        res.json({ shortUrl: `http://localhost:3000/${response.$id}/${shortCode}` });
+        res.json({ shortUrl: `http://localhost:3000/${shortCode}` });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// Route to handle redirection for shortened URLs
-app.get('/:databaseId/:collectionId/:shortCode', async (req, res) => {
-    const { databaseId, collectionId, shortCode } = req.params;
 
-    // Validate databaseId, collectionId here
+app.get('/:shortCode', async (req, res) => {
+    const { shortCode } = req.params;
+
+    const databaseId = 'TINYURL';
+    const collectionId = 'urlid';
 
     try {
-        // Initialize Appwrite client with the correct project ID
         const client = new sdk.Client();
         client
             .setEndpoint("https://cloud.appwrite.io/v1")
-            .setProject(databaseId)
+            .setProject('66668a69001e7a818205')
             .setKey('3f9b8e13086a41a37b83a591d7ed5d5b551c2d2f50847d28b0e5ff5c346fc9a41f607ca42b1fbdf0357b7b2889a78cf20dd55ed206f4e3c0cfa5e187177cad12045e93d04b177fcc570e80f59bf76e75c885595f539a5124f4e51f39ede4f16493418fd68cec65eded1b4a3e6d8c1ae214c14a1d862704add52e2b10c0b0b699')
             .setSelfSigned();
 
         const databases = new sdk.Databases(client);
 
-        // Ensure query to filter documents by 'short_code' field
         const response = await databases.listDocuments(databaseId, collectionId, [
             sdk.Query.equal('short_code', shortCode)
         ]);
