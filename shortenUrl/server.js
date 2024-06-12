@@ -23,13 +23,27 @@ function generateShortCode(length = 6) {
 }
 
 app.post('/shorten', async (req, res) => {
-    const { originalUrl } = req.body;
-    const shortCode = generateShortCode();
+    const { originalUrl, alias } = req.body;
+    const shortCode = alias || generateShortCode();
+
+    const databaseId = 'TINYURL';
+    const collectionId = 'urlid';
 
     try {
+        // Check if alias already exists
+        if (alias) {
+            const checkResponse = await databases.listDocuments(databaseId, collectionId, [
+                sdk.Query.equal('short_code', alias)
+            ]);
+
+            if (checkResponse.documents.length > 0) {
+                return res.status(400).json({ error: 'Alias already exists. Please choose a different alias.' });
+            }
+        }
+
         const response = await databases.createDocument(
-            'TINYURL',
-            'urlid',
+            databaseId,
+            collectionId,
             sdk.ID.unique(),
             {
                 original_url: originalUrl,
@@ -43,7 +57,6 @@ app.post('/shorten', async (req, res) => {
     }
 });
 
-
 app.get('/:shortCode', async (req, res) => {
     const { shortCode } = req.params;
 
@@ -51,15 +64,6 @@ app.get('/:shortCode', async (req, res) => {
     const collectionId = 'urlid';
 
     try {
-        const client = new sdk.Client();
-        client
-            .setEndpoint("https://cloud.appwrite.io/v1")
-            .setProject('66668a69001e7a818205')
-            .setKey('3f9b8e13086a41a37b83a591d7ed5d5b551c2d2f50847d28b0e5ff5c346fc9a41f607ca42b1fbdf0357b7b2889a78cf20dd55ed206f4e3c0cfa5e187177cad12045e93d04b177fcc570e80f59bf76e75c885595f539a5124f4e51f39ede4f16493418fd68cec65eded1b4a3e6d8c1ae214c14a1d862704add52e2b10c0b0b699')
-            .setSelfSigned();
-
-        const databases = new sdk.Databases(client);
-
         const response = await databases.listDocuments(databaseId, collectionId, [
             sdk.Query.equal('short_code', shortCode)
         ]);
