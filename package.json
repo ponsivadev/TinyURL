@@ -2,8 +2,12 @@
   "dependencies": {
     "appwrite": "^15.0.0",
     "body-parser": "^1.20.2",
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "node-appwrite": "^11.1.1"
+    "geoip-lite": "^1.4.10",
+    "node-appwrite": "^11.1.1",
+    "user-agent": "^1.0.4",
+    "uuid": "^10.0.0"
   },
   "name": "tinyurl",
   "version": "1.0.0",
