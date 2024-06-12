@@ -22,7 +22,7 @@ function generateShortCode(length = 6) {
     return result;
 }
 
-async function shortenurl(req, res) {
+app.post('/shorten', async (req, res) => {
     const { originalUrl, alias, expirationDate } = req.body;
     const shortCode = alias || generateShortCode();
 
@@ -60,8 +60,7 @@ async function shortenurl(req, res) {
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
-}
-
+});
 
 app.get('/:shortCode', async (req, res) => {
     const { shortCode } = req.params;
